@@ -1079,7 +1079,8 @@ def _setattr(obj, name, value):
 
 def _hasattr(obj, name):
   """Ensure hasattr checks don't create side-effects for properties."""
-  if (not _isclass(obj) and hasattr(obj, '__dict__') and
+  if (not _isclass(obj) and hasattr(obj, '__dict__') and not
+      obj.__class__.__name__ == 'DefaultCacheProxy' and
       name not in obj.__dict__):
     if name in DEFAULT_CLASS_ATTRIBUTES:
       return False  # avoid false positives for things like __call__
@@ -1100,7 +1101,9 @@ def _isclass(obj):
 def _isproperty(obj, name):
   if isinstance(obj, Mock):
     return False
-  if not _isclass(obj) and hasattr(obj, '__dict__') and name not in obj.__dict__:
+  if (not _isclass(obj) and hasattr(obj, '__dict__') and not
+      obj.__class__.__name__ == 'DefaultCacheProxy' and
+      name not in obj.__dict__):
     attr = getattr(obj.__class__, name)
     if type(attr) is property:
       return True
