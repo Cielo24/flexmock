@@ -103,9 +103,17 @@ class ReturnValue(object):
 
 
 class ArgSpec(object):
-  """Silly hack for inpsect.getargspec return a tuple on python <2.6"""
-  def __init__(self, spec):
-    self.args, self.varargs, self.keywords, self.defaults = spec
+  """
+  Python 3.x compatibility with getfullargspec,
+  Python <2.6 compatibility for inpsect.getargspec return a tuple
+  """
+  def __init__(self, original):
+    if hasattr(inspect, 'getfullargspec'):
+        # Store all and drop the last three which flexmock doesn't care about
+        self.args, self.varargs, self.keywords, self.defaults, \
+          kwonlyargs, kwonlydefaults, annotations = inspect.getfullargspec(original)
+    else:
+        self.args, self.varargs, self.keywords, self.defaults = inspect.getargspec(original)
 
 
 class FlexmockContainer(object):
@@ -299,7 +307,7 @@ class Expectation(object):
     original = self.__dict__.get('original')
     if original:
       try:
-        self.argspec = ArgSpec(inspect.getargspec(original))
+        self.argspec = ArgSpec(original)
       except TypeError:
         # built-in function: fall back to stupid processing and hope the
         # builtins don't change signature
